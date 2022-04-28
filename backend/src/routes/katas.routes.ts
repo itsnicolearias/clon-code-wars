@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { createKata, getAllKatas, getKataById, updateKataById, deleteKataByID } from "../controllers/katas.controller";
-import { verifyToken } from "../middlewares";
+import { verifyToken, isAdmin } from "../middlewares/authJwt";
 
 const router = Router()
 
@@ -8,7 +8,7 @@ router.get('/', getAllKatas)
 
 router.get('/:kataId', getKataById)
 
-router.post('/', verifyToken, createKata)
+router.post('/', verifyToken, isAdmin, createKata)
 
 router.put('/:kataId', verifyToken, updateKataById)
 

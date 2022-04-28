@@ -4,7 +4,11 @@ import Katas from '../models/Katas'
 export const createKata = async (req, res) => {
    
    const {name, description, solution} = req.body 
-   const newKata = new Katas({name, description, solution})
+   
+   const newKata = new Katas({
+       name, 
+       description,
+       solution})
    const kataSaved = await newKata.save()
     res.json(kataSaved)
 

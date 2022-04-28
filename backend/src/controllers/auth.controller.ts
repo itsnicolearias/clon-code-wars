@@ -1,8 +1,11 @@
 import User from "../models/User";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import env from "dotenv";
+import config from '../config'
 import Role from "../models/Role";
+
+
+
 
 export const register = async (req, res) => {
   //hash password
@@ -24,6 +27,15 @@ export const register = async (req, res) => {
 
   //buscar si el usuario ya tiene un rol asignado
   //sino le asigna por defecto el rol user
+  /*
+  if (req.body.roles) {
+    const foundRoles = await Role.find({ name: { $in: roles } });
+    user.roles = foundRoles.map((role) => role._id);
+  } else {
+    const role = await Role.findOne({ name: "user" });
+    user.roles = [role._id];
+  }*/
+
 
   const { roles } = req.body.roles;
 
@@ -45,29 +57,25 @@ export const register = async (req, res) => {
 };
 
 export const login = async (req, res) => {
-  //comprobar si usuario existe existe en la base de datos
-  const user = await User.findOne({ email: req.body.email }).populate("roles")
-  if (!user) return res.json({ error: true, message: "Usuario no existe" });
+  try {
+    // Request body email can be an email or username
+    const userFound = await User.findOne({ email: req.body.email }).populate(
+      "roles"
+    );
 
-  //comprobar contraseña
-  const validPass = await bcrypt.compare(req.body.password, user.password);
+    if (!userFound) return res.status(400).json({ message: "User Not Found" });
+
+    //comprobar contraseña
+  const validPass = await bcrypt.compare(req.body.password, userFound.password);
   if (!validPass)
-    return res.json({ error: true, message: "Credenciales invalidas" });
+    return res.json("Credenciales invalidas");
 
-  //JWT
-  const token = jwt.sign(
-    {
-      name: user.name,
-      id: user._id,
-    },
-    process.env.TOKEN_SECRET, {
-      expiresIn: 10800
-    }
-  )
+    const token = jwt.sign({ id: userFound._id }, config.SECRET, {
+      expiresIn: 10800, // 24 hours
+    });
 
-  //login
-  res.json({
-    message: "Bienvenido",
-    token: token,
-  });
+    res.json({ token });
+  } catch (error) {
+    console.log(error);
+  }
 };
